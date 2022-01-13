@@ -36,10 +36,13 @@ dojo.declare("mixin.IReactAware", null, {
     },
 
     render: function(container){
+        this.game.ui.dirtyComponents.push(this);
+
         React.render($r(this.component, {
             game: this.game
         }), container);
 
+        this.container = container;
         return container;
     },
 
@@ -47,7 +50,11 @@ dojo.declare("mixin.IReactAware", null, {
 
     },
 
+    //does not seem to be called automatically
     destroy: function(){
+        if (!this.container){
+            throw "Integrity failure, trying to unmount component on an empty container";
+        }
         React.unmountComponentAtNode(this.container);
     }
 });
@@ -130,6 +137,10 @@ dojo.declare("classes.ui.UISystem", null, {
 
     isEffectMultiplierEnabled: function(){
         return false;
+    },
+
+    checkForUpdates: function(){
+        //nothing
     }
 });
 
@@ -158,8 +169,10 @@ dojo.declare("classes.ui.DesktopUI", classes.ui.UISystem, {
     isChatVisited: false,
     isCenter: false,
 
-    defaultSchemes: ["default", "dark", "grassy", "sleek", "black", "wood", "bluish", "grayish", "greenish"],
+    defaultSchemes: ["default", "dark", "grassy", "sleek", "black", "wood", "bluish", "grayish", "greenish", "tombstone", "spooky"],
     allSchemes: ["default"].concat(new classes.KGConfig().statics.schemes),
+
+    dirtyComponents: [],
 
     constructor: function(containerId){
         this.containerId = containerId;
@@ -344,6 +357,12 @@ dojo.declare("classes.ui.DesktopUI", classes.ui.UISystem, {
         var scrollPosition = midColumn.scrollTop;
 
         var container = dojo.byId(this.containerId);
+
+        //unmount everything that relies on the container
+        for (var i in this.dirtyComponents){
+            this.dirtyComponents[i].destroy();
+        }
+        this.dirtyComponents = [];
         dojo.empty(container);
 
         var tabNavigationDiv = dojo.create("div", { className: "tabsContainer"}, container);
@@ -388,7 +407,7 @@ dojo.declare("classes.ui.DesktopUI", classes.ui.UISystem, {
                         this.activeTabId = tab.tabId;
                         this.render();
 
-                        //this.game.telemetry.logEvent("tab", tab.tabId);
+                        this.game.telemetry.logRouteChange(tab.tabId);
                     }, tab)
             );
 
@@ -634,28 +653,7 @@ dojo.declare("classes.ui.DesktopUI", classes.ui.UISystem, {
 
     updateFastHunt: function(){
         if (!this.fastHuntContainer){
-            this.fastHuntContainer = $("#fastHuntContainer")[0];
-        }
-
-        if (!this.fastHuntContainer){
-            return;
-        }
-
-        var catpower = this.game.resPool.get("manpower");
-        var showFastHunt = (catpower.value >= 100) && (!this.game.challenges.isActive("pacifism"));
-
-        //blazing fast vanilla toggle
-        if (showFastHunt){
-            if (this.fastHuntContainer.style.visibility == "hidden"){
-                this.fastHuntContainer.style.visibility = "visible";
-            }
-            var huntCount = Math.floor(catpower.value / 100);
-            $("#fastHuntContainerCount")[0].innerHTML = this.game.getDisplayValueExt(huntCount, false, false, 0)
-                + " " + (huntCount === 1 ? $I("left.hunt.time") : $I("left.hunt.times"));
-        } else {
-            if (this.fastHuntContainer.style.visibility == "visible"){
-                this.fastHuntContainer.style.visibility = "hidden";
-            }
+            this.fastHuntContainer = dojo.byId("fastHuntContainer");
         }
     },
 
@@ -707,7 +705,7 @@ dojo.declare("classes.ui.DesktopUI", classes.ui.UISystem, {
             var calendarSignSpan = dojo.byId("calendarSign");
             var cycle = calendar.cycles[calendar.cycle];
             if (cycle && this.game.science.get("astronomy").researched) {
-            	calendarSignSpan.style.color = calendar.cycleYearColor();
+                calendarSignSpan.style.color = calendar.cycleYearColor();
                 calendarSignSpan.innerHTML = cycle.glyph + " ";
             }
         } else {
@@ -726,26 +724,6 @@ dojo.declare("classes.ui.DesktopUI", classes.ui.UISystem, {
     },
 
     updateAdvisors: function(){
-        if (this.game.bld.get("field").on == 0){
-            return;
-        }
-
-        var advDiv = dojo.byId("advisorsContainer");
-        if (!advDiv){
-            return;
-        }
-        dojo.empty(advDiv);
-
-        var calendar = this.game.calendar,
-            winterDays = calendar.daysPerSeason -
-                (calendar.getCurSeason().name === "winter" ? calendar.day : 0);
-
-        var catnipPerTick = this.game.calcResourcePerTick("catnip", { modifiers:{
-            "catnip" : 0.25
-        }});	//calculate estimate winter per tick for catnip;
-
-        var visibility = this.game.resPool.get("catnip").value + winterDays * catnipPerTick * calendar.ticksPerDay <= 0 ? "visible" : "hidden";
-        advDiv.innerHTML = "<span style='visibility: " + visibility + "'>" + $I("general.food.advisor.text") + "<span>";
     },
 
     updateLanguage: function(){
@@ -804,6 +782,7 @@ dojo.declare("classes.ui.DesktopUI", classes.ui.UISystem, {
         $("#disableTelemetry")[0].checked = game.opts.disableTelemetry;
         $("#noConfirm")[0].checked = game.opts.noConfirm;
         $("#IWSmelter")[0].checked = game.opts.IWSmelter;
+        $('#autoSaveReset')[0].checked = game.opts.autoSaveReset;
 
         var selectedLang = i18nLang.getLanguage();
         var locales = i18nLang.getAvailableLocales();
@@ -1003,7 +982,7 @@ dojo.declare("classes.ui.DesktopUI", classes.ui.UISystem, {
         $("#optionEnableRedshift").text($I("ui.option.enable.redshift"));
         $("#optionEnableRedshiftGflops").text($I("ui.option.enable.redshiftGflops"));
         $("#optionBatchSize").text($I("ui.option.batch.size"));
-        $("#optionForceLZ").text($I("ui.option.force.lz"));
+        $("#optionForceLZ").html($I("ui.option.force.lz"));
         $("#optionCompressSaveFile").html($I("ui.option.compress.savefile"));
         $("#exportButton").attr("value", $I("ui.option.export.button"));
         $("#importButton").attr("value", $I("ui.option.import.button"));
@@ -1019,10 +998,11 @@ dojo.declare("classes.ui.DesktopUI", classes.ui.UISystem, {
         $("#importFromText").text($I("ui.option.import.from.text"));
         $("#doImportButton").attr("value",$I("ui.option.do.import.button"));
         $("#cancelButton").attr("value",$I("ui.option.cancel.button"));
-        $("#appText").text($I("ui.option.app.text"));
+        $("#appText").html($I("ui.option.app.text"));
         $("#appAndroid").text($I("ui.option.app.android"));
         $("#appIOS").text($I("ui.option.app.ios"));
         $("#optionNotation").text($I("ui.option.notation"));
+        $("#optionDisablePollution").text($I("ui.option.pollution"));
     },
 
     _createFilter: function(filter, fId, filtersDiv){
@@ -1140,6 +1120,7 @@ dojo.declare("classes.ui.DesktopUI", classes.ui.UISystem, {
                 break;
             }
         }
+        this.game.telemetry.logRouteChange(this.activeTabId);
 
         var uiData = LCstorage["com.nuclearunicorn.kittengame.ui"];
         try {
@@ -1183,6 +1164,20 @@ dojo.declare("classes.ui.DesktopUI", classes.ui.UISystem, {
     isEffectMultiplierEnabled: function(){
         //console.log(this.keyStates);
         return this.keyStates.shiftKey;
+    },
+
+    checkForUpdates: function(){
+        var self = this;
+        var now = Date.now();
+        
+        $.getJSON("build.version.json?=" + now).then(function(json){
+            var buildRevision = json.buildRevision;
+            
+            if (buildRevision > self.game.telemetry.buildRevision){
+                $("#newVersion").toggle(true);
+                self.game.msg("有新版本，可以点击右上角更新按钮。");
+            }
+        });
     }
 
 });
