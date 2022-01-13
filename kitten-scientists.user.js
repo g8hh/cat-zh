@@ -334,7 +334,7 @@ var run = function() {
             'ui.upgrade.policies.load': '读取',
             'ui.upgrade.policies.show': '列表',
 
-            'ui.faith.addtion': '宗教选项',
+            'ui.faith.addtion': '赞美功能',
             'option.faith.best.unicorn': '自动最效率独角兽建筑',
             'option.faith.best.unicorn.desc': '自动献祭独角兽，并会建造最佳独角兽建筑',
             'option.faith.transcend': '自动最佳次元超越',
@@ -346,7 +346,6 @@ var run = function() {
             'summary.adore': '通过赞美群星积累了 {0} 顿悟',
             'filter.adore': '赞美群星',
             'adore.trigger.set': '为自动赞美群星设定一个新触发值，取值范围为 0 到 1 的小数。\n\n同时满足以下条件珂学家将自动赞美群星。\n1. 赞美群星再赞美太阳后，需太阳革命加成 ≥ 触发值 * 1000%\n2. 当前信仰 / 信仰上限 ≥ 0.98(赞美太阳触发条件设置0.98配合使用)\n3. 次元超越等级低于 11，需赞美群星后的猫薄荷产量＞0。\n喵喵保护协会不允许饿死喵喵喵\n4. 次元超越等级低于12，需当前虔诚＞上次赞美群星时候的虔诚',
-
             'resources.add': '添加资源',
             'resources.clear.unused': '清除未使用',
             'resources.stock': '库存: {0}',
@@ -790,28 +789,28 @@ var run = function() {
                 // The *allowcapped* property allows us to trade even if the sold resources are at their cap.
                 render: false,
                 items: {
-                    dragons:    {enabled: true,  require: 'titanium',    allowcapped: false,    limited: true,
+                    dragons:    {enabled: false,  require: 'titanium',    allowcapped: false,    limited: true,
                         summer:  true,  autumn:  true,  winter:  true,          spring:      true},
 
                     zebras:     {enabled: true,  require: false,         allowcapped: false,    limited: true,
                         summer:  true,  autumn:  true,  winter:  true,          spring:      true},
 
-                    lizards:    {enabled: true,  require: 'minerals',    allowcapped: false,    limited: true,
+                    lizards:    {enabled: false,  require: 'minerals',    allowcapped: false,    limited: true,
                         summer:  true,  autumn:  false, winter:  false,         spring:      false},
 
-                    sharks:     {enabled: true,  require: 'iron',        allowcapped: false,    limited: true,
+                    sharks:     {enabled: false,  require: 'iron',        allowcapped: false,    limited: true,
                         summer:  false, autumn:  false, winter:  true,          spring:      false},
 
-                    griffins:   {enabled: true,  require: 'wood',        allowcapped: false,    limited: true,
+                    griffins:   {enabled: false,  require: 'wood',        allowcapped: false,    limited: true,
                         summer:  false, autumn:  true,  winter:  false,         spring:      false},
 
-                    nagas:      {enabled: true,  require: false,         allowcapped: false,    limited: true,
+                    nagas:      {enabled: false,  require: false,         allowcapped: false,    limited: true,
                         summer:  false, autumn:  false, winter:  false,         spring:      true},
 
-                    spiders:    {enabled: true,  require: false,         allowcapped: false,    limited: true,
+                    spiders:    {enabled: false,  require: false,         allowcapped: false,    limited: true,
                         summer:  false, autumn:  true,  winter:  false,         spring:      false},
 
-                    leviathans: {enabled: true,  require: 'unobtainium', allowcapped: true,     limited: true,
+                    leviathans: {enabled: false,  require: 'unobtainium', allowcapped: true,     limited: true,
                         summer:  true,  autumn:  true,  winter:  true,          spring:      true}
                 }
             },
@@ -4427,6 +4426,7 @@ var run = function() {
                 var addition = $('<div/>', {
                     id: 'toggle-addition-controls',
                     text: i18n('ui.faith.addtion'),
+                    title: "太阳教团的自动化项目",
                     css: {cursor: 'pointer',
                         display: 'inline-block',
                         float: 'right',
