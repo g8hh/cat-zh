@@ -266,7 +266,7 @@ dojo.declare("classes.managers.ChallengesManager", com.nuclearunicorn.core.TabMa
 		calculateEffects: function(self, game){
 			if(self.active){
 				self.effects["arrivalSlowdown"] = 10;
-				self.effects["cryochamberSupport"] = 0;
+				self.effects["cryochamberSupport"] = 1; //this is a quick fix for cryochamber cap when resetting into PA; does not make PA easier so it's ok
 			}else{
 				self.effects["arrivalSlowdown"] = 0;
 				self.effects["cryochamberSupport"] = 1;
@@ -438,6 +438,9 @@ dojo.declare("classes.managers.ChallengesManager", com.nuclearunicorn.core.TabMa
 			// Reset with any benefit of chronosphere (resources, kittens, etc...)
 			// Should put resources and kittens to reserve HERE!
 			// Kittens won't be put into reserve in post apocalypcis!
+			if (game.opts.autoSaveReset != undefined && game.opts.autoSaveReset) {
+				game.saveToFile(true);
+			}
 			game.challenges.onRunReset();
 			game.challenges.reserves.calculateReserves(isIronWillPending);
 			game.bld.get("chronosphere").val = 0;
