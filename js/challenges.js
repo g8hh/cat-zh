@@ -438,6 +438,9 @@ dojo.declare("classes.managers.ChallengesManager", com.nuclearunicorn.core.TabMa
 			// Reset with any benefit of chronosphere (resources, kittens, etc...)
 			// Should put resources and kittens to reserve HERE!
 			// Kittens won't be put into reserve in post apocalypcis!
+			if (game.opts.autoSaveReset != undefined && game.opts.autoSaveReset) {
+				game.saveToFile(true);
+			}
 			game.challenges.onRunReset();
 			game.challenges.reserves.calculateReserves(isIronWillPending);
 			game.bld.get("chronosphere").val = 0;

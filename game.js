@@ -1722,6 +1722,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 	telemetry: null,
 	server: null,
 	math: null,
+	loadingSave: false, //while save is being imported we should ignore production from buildings for one tick; hack
 
 	//global cache
 	globalEffectsCached: {},
@@ -2629,7 +2630,9 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 				throw "Integrity check failure";
 			}
 
+			this.loadingSave = true;
 			this.load();
+			this.loadingSave = false;
 			this.msg($I("save.import.msg"));
 
 			this.render();
@@ -4311,7 +4314,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 		this.timer.updateScheduledEvents();
         //var fpsElement;
 
-		if (this.isPaused){
+		if (this.isPaused || this.loadingSave){
 			return;
 		}
 
@@ -4390,6 +4393,9 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 		}
 		var game = this;
 		game.ui.confirm($I("reset.confirmation.title"), msg, function() {
+			if (game.opts.autoSaveReset != undefined && game.opts.autoSaveReset) {
+				game.saveToFile(true);
+			}
 			game.challenges.onRunReset();
 			if (game.challenges.isActive("atheism") && game.time.getVSU("cryochambers").on > 0) {
 				game.challenges.getChallenge("atheism").researched = true;
@@ -4409,9 +4415,6 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 	},
 
 	resetAutomatic: function() {
-		if (game.opts.autoSaveReset != undefined && game.opts.autoSaveReset) {
-					game.saveToFile(true);
-		}
 		this.timer.scheduleEvent(dojo.hitch(this, function(){
 			this._resetInternal();
 			this.mobileSaveOnPause = false;

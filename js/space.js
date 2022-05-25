@@ -273,9 +273,7 @@ dojo.declare("classes.managers.SpaceManager", com.nuclearunicorn.core.TabManager
 				else {
 					self.effects["energyConsumption"] = 1;
 				}
-                var test = self.upgrades;
-				game.upgrade(test); //this way observatories won't have to use action
-                upgrades = null;
+				game.upgrade(self.upgrades); //this way observatories won't have to use action
 			},
 			upgrades: {
 				buildings: ["observatory"]

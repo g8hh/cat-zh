@@ -73,7 +73,7 @@ self.addEventListener('fetch', function(event) {
 	// 过滤版本号文件
 	let serverJson = requestURL.includes('server.json');
 	let buildJson = requestURL.includes('build.version.json');
-	// 过滤 已知其他跨域的
+	// 过滤已知其他跨域的
 	let skipWorker = CACHE_LIST.indexOf(objectURL.host);
 	if (skipWorker > -1) {
 		// 无视url参数
@@ -113,6 +113,10 @@ self.addEventListener('fetch', function(event) {
 						});
 					});
 					return responseFetch;
+				}).catch(() => {
+					if (response) {
+						return response;
+					}
 				});
 			})
 		);
